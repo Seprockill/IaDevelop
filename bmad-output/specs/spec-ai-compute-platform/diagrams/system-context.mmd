@@ -1,0 +1,71 @@
+graph TD
+    subgraph Users["User Ecosystem"]
+        Admin[Academic Administrator]
+        Instructor[Course Instructor]
+        Student[Student]
+        Operator[Lab Operator / Sysadmin]
+        Researcher[Privileged AI Researcher]
+    end
+
+    subgraph EdgeLayer["Edge & Security Layer"]
+        Ingress[API Gateway / Ingress Controller]
+        SSO[Institutional SSO / OIDC / LDAP]
+    end
+
+    subgraph ControlPlane["AI Platform Control Plane"]
+        WebPortal[Web UI Management Portal]
+        CLI[unictl CLI & API Gateway]
+        QuotaEngine[Quota & Token Metering Engine]
+        Reservations[Classroom Reservation Controller]
+        PlacementEngine[Hardware Placement Controller]
+        TelemetryCollector[Telemetry & Node Health Collector]
+    end
+
+    subgraph DataStore["State & Cache Layer"]
+        RedisLock[(Redis Token Bucket & Distributed Lock)]
+        Postgres[(PostgreSQL State & Audit Log)]
+    end
+
+    subgraph K8sCluster["Kubernetes & Kubeflow Cluster Engine"]
+        KubeAPI[Kubernetes API Server & Webhooks]
+        CustomScheduler[Tier-Aware Scheduler & Gang Controller]
+        KFTraining[Kubeflow Training Operator]
+        KFNotebooks[Kubeflow Notebook Controller]
+        Prometheus[Prometheus & DCGM Exporter]
+    end
+
+    subgraph GPUFleet["Heterogeneous Physical GPU Fleet"]
+        StandardNodes["Standard Node Tier (24 GB VRAM GPUs)"]
+        HighCapNodes["High-Capacity Tier (2x48 GB VRAM Nodes)"]
+    end
+
+    Users --> Ingress
+    Ingress --> SSO
+    Ingress --> WebPortal
+    Ingress --> CLI
+
+    WebPortal --> QuotaEngine
+    WebPortal --> Reservations
+    CLI --> PlacementEngine
+
+    QuotaEngine --> RedisLock
+    QuotaEngine --> Postgres
+    Reservations --> Postgres
+
+    QuotaEngine --> KubeAPI
+    Reservations --> KubeAPI
+    PlacementEngine --> KubeAPI
+
+    KubeAPI --> CustomScheduler
+    KubeAPI --> KFTraining
+    KubeAPI --> KFNotebooks
+
+    CustomScheduler --> StandardNodes
+    CustomScheduler --> HighCapNodes
+    KFTraining --> HighCapNodes
+    KFNotebooks --> StandardNodes
+
+    StandardNodes --> Prometheus
+    HighCapNodes --> Prometheus
+    Prometheus --> TelemetryCollector
+    TelemetryCollector --> KubeAPI

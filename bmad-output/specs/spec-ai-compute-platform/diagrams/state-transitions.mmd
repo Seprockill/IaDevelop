@@ -1,0 +1,49 @@
+stateDiagram-v2
+    [*] --> Submitted: Job / Session Request Received
+
+    state "Admissions & Quota Check" as Admission {
+        Submitted --> QuotaValidating: Inspect User & Dept Token Balance
+        QuotaValidating --> QuotaDenied: Insufficient Tokens / Cap Reached
+        QuotaDenied --> [*]: Reject (HTTP 429 / Webhook Denial)
+        QuotaValidating --> Admitted: Tokens Reserved & Locked
+    }
+
+    state "Scheduling & Placement" as Scheduling {
+        Admitted --> TierRouting: Inspect VRAM Request
+        TierRouting --> StandardQueue: Request <= 24 GB VRAM
+        TierRouting --> HighCapQueue: Request > 24 GB or Multi-GPU
+
+        StandardQueue --> CheckingClassLock: Check Active/Upcoming Class Locks
+        CheckingClassLock --> DrainingPreemptible: Within T-15m Reservation Window
+        DrainingPreemptible --> DispatchedStandard: Allocated to 24 GB Node
+
+        HighCapQueue --> GangAllocating: Check Gang Scheduling Availability
+        GangAllocating --> DispatchedHighCap: Allocated to 2x48 GB Nodes
+    }
+
+    state "Runtime Execution" as Runtime {
+        DispatchedStandard --> RunningInteractive: Pod Initialized (Jupyter/Code)
+        DispatchedHighCap --> RunningDistributed: Gang Pods Initialized (Kubeflow)
+
+        RunningInteractive --> IdleTimeout: No Activity > 30m
+        IdleTimeout --> Terminated: Pod Reaped & VRAM Released
+
+        RunningDistributed --> PreemptionSignaled: Higher-Priority Class/Job Demands Node
+        PreemptionSignaled --> Checkpointing: Send SIGTERM (15m Grace Period)
+        Checkpointing --> Preempted: Checkpoint Saved & Pod Evacuated
+        Preempted --> HighCapQueue: Re-queued with Priority Boost
+
+        RunningDistributed --> Completed: Training Succeeded
+        RunningInteractive --> Completed: User Session Ended
+    }
+
+    state "Node Failure & Health Quarantine" as Quarantine {
+        RunningDistributed --> NodeDegraded: XID Error or Temp > 88°C
+        RunningInteractive --> NodeDegraded: XID Error or Temp > 88°C
+        NodeDegraded --> NodeCordoned: Auto-Cordon & Mark Unschedulable
+        NodeCordoned --> EvacuatingPods: Evacuate Workloads within 30s
+        EvacuatingPods --> HighCapQueue: Re-queue Jobs
+    }
+
+    Completed --> [*]: Finalize Compute Accounting
+    Terminated --> [*]: Reclaim Token Lock

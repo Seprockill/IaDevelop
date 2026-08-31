@@ -1,0 +1,42 @@
+installation:
+  version: 6.11.0
+  installDate: 2026-08-31T15:55:14.372Z
+  lastUpdated: 2026-08-31T15:55:14.372Z
+modules:
+  - name: core
+    version: 6.11.0
+    installDate: 2026-08-31T15:55:13.957Z
+    lastUpdated: 2026-08-31T15:55:14.366Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 6.11.0
+    installDate: 2026-08-31T15:55:13.993Z
+    lastUpdated: 2026-08-31T15:55:14.367Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: wds
+    version: v0.4.3
+    installDate: 2026-08-31T15:55:14.116Z
+    lastUpdated: 2026-08-31T15:55:14.369Z
+    source: external
+    npmPackage: bmad-wds
+    repoUrl: https://github.com/bmad-code-org/bmad-method-wds-expansion
+    channel: stable
+    sha: cc16f09fcfab26d35635af1491f36a38a8431c8d
+  - name: tea
+    version: v1.23.4
+    installDate: 2026-08-31T15:55:14.265Z
+    lastUpdated: 2026-08-31T15:55:14.372Z
+    source: external
+    npmPackage: bmad-method-test-architecture-enterprise
+    repoUrl: https://github.com/bmad-code-org/bmad-method-test-architecture-enterprise
+    channel: stable
+    sha: f2cb09a5ebc1c16f65a52265bad50e831760c988
+ides:
+  - antigravity
+  - antigravity-cli
+  - cursor
+  - cline
